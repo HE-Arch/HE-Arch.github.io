@@ -1,0 +1,287 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>盾安云商 - 成本节省计算器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: #1e3a8a;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.8;
+        }
+        .calculator {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .input-group label {
+            font-weight: bold;
+            color: #1e3a8a;
+            font-size: 18px;
+            min-width: 250px;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #3b82f6;
+            border-radius: 10px;
+            font-size: 18px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .input-group input:focus {
+            border-color: #1e3a8a;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        button {
+            background: linear-gradient(to right, #3b82f6, #1e3a8a);
+            color: white;
+            border: none;
+            padding: 16px 25px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 auto;
+            display: block;
+            width: 200px;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(59, 130, 246, 0.4);
+        }
+        .result {
+            background: #e6f7ff;
+            border-left: 5px solid #3b82f6;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .result h3 {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        #result {
+            font-size: 36px;
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+            position: relative;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+            border-top: 1px solid #e9ecef;
+        }
+        .formula {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .formula span {
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>盾安云商 · 安全成本节省计算器</h1>
+            <p>精准测算电商平台安全保障带来的经济效益</p>
+        </div>
+        
+        <div class="calculator">
+            <div class="input-group">
+                <label for="gmv">请输入平台年交易额（万元）:</label>
+                <input type="number" id="gmv" value="10000" min="0">
+            </div>
+            
+            <button onclick="calculate()">计算节省成本</button>
+            
+            <div class="result">
+                <h3>预计年节省成本</h3>
+                <div id="result">0</div>
+                <p>万元</p>
+                
+                <div class="formula">
+                    计算公式: <span>节省成本 = 年交易额 × 0.007（行业欺诈损失率） × 0.72（盾安降低比例）</span>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="footer">
+            © 2024 盾安云商 | 数据来源：艾瑞咨询《中国电商安全白皮书》
+        </div>
+    </div>
+
+    <script>
+        // 定义图表变量
+        let myChart = null;
+        
+        // 计算函数
+        function calculate() {
+            // 获取输入的年交易额
+            const gmvInput = document.getElementById('gmv');
+            let gmv = parseFloat(gmvInput.value);
+            
+            // 验证输入
+            if (isNaN(gmv) || gmv <= 0) {
+                alert('请输入有效的年交易额（大于0的数字）');
+                gmvInput.value = '10000';
+                gmv = 10000;
+            }
+            
+            // 计算节省成本（公式：节省 = 年交易额 × 行业欺诈损失率0.007 × 盾安降低比例0.72）
+            const savingRate = 0.007;  // 行业平均欺诈损失率
+            const reduction = 0.72;   // 盾安云商可降低的比例
+            const totalSaving = gmv * savingRate * reduction;
+            
+            // 显示结果（保留1位小数）
+            document.getElementById('result').innerText = totalSaving.toFixed(1);
+            
+            // 更新饼图
+            updateChart(totalSaving);
+        }
+        
+        // 更新饼图
+        function updateChart(totalSaving) {
+            const ctx = document.getElementById('chart').getContext('2d');
+            
+            // 如果已有图表，先销毁
+            if (myChart) {
+                myChart.destroy();
+            }
+            
+            // 计算各分项节省（按比例）
+            const fraudSaving = totalSaving * 0.38;   // 38%来自防欺诈
+            const complianceSaving = totalSaving * 0.25; // 25%来自合规
+            const opsSaving = totalSaving * 0.20;      // 20%来自运维
+            const retentionSaving = totalSaving * 0.17; // 17%来自客户流失挽回
+            
+            // 创建新图表
+            myChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: [
+                        `防欺诈损失: ${fraudSaving.toFixed(1)}万元`,
+                        `合规成本: ${complianceSaving.toFixed(1)}万元`,
+                        `运维成本: ${opsSaving.toFixed(1)}万元`,
+                        `客户流失挽回: ${retentionSaving.toFixed(1)}万元`
+                    ],
+                    datasets: [{
+                        data: [fraudSaving, complianceSaving, opsSaving, retentionSaving],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',    // 红色
+                            'rgba(54, 162, 235, 0.8)',    // 蓝色
+                            'rgba(255, 206, 86, 0.8)',    // 黄色
+                            'rgba(75, 192, 192, 0.8)'     // 青色
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                },
+                                padding: 20
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `成本节省分布（总计: ${totalSaving.toFixed(1)}万元）`,
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: 20
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = Math.round((value / totalSaving) * 100);
+                                    return `${label}: ${value.toFixed(1)}万元 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 页面加载时自动计算一次
+        window.onload = calculate;
+    </script>
+</body>
+</html>
